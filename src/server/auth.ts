@@ -5,7 +5,7 @@ import {
   type NextAuthOptions,
   type DefaultSession,
 } from "next-auth";
-import EmailProvider from "next-auth/providers/email";
+import CredentialsProvider from "next-auth/providers/credentials";
 import { env } from "~/env.mjs";
 import { prisma } from "~/server/db";
 
@@ -47,17 +47,24 @@ export const authOptions: NextAuthOptions = {
   },
   adapter: PrismaAdapter(prisma),
   providers: [
-    EmailProvider({
-      server: {
-        host: process.env.EMAIL_SERVER_HOST,
-        port: process.env.EMAIL_SERVER_PORT,
-        auth: {
-          user: process.env.EMAIL_SERVER_USER,
-          pass: process.env.EMAIL_SERVER_PASSWORD
+    CredentialsProvider({
+      name: "Credentials",
+      credentials: {
+        username: { label: "Name", type: "text", placeholder: "jsmith" },
+        password: { label: "Password", type: "password" },
+      },
+      authorize(credentials, req) {
+        const user = { id: "1", name: "J Smith", email: "jsmith@example.com" }
+
+        if (user) {
+          // Any object returned will be saved in `user` property of the JWT
+          return user
+        } else {
+          // If you return null then an error will be displayed advising the user to check their details.
+          return null
         }
       },
-      from: process.env.EMAIL_FROM
-    }),
+    })
     /**
      * ...add more providers here.
      *
